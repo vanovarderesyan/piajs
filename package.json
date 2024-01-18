@@ -1,10 +1,14 @@
 {
-  "name": "piajs",
-  "version": "1.0.0",
+  "name": "piavpnjs",
+  "version": "1.0.2",
   "description": "Node.js wrapper around the command line interface for The Private Internet Access Desktop Client. Intended to facilitate the operation of the PIA client from within Node.js",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vanovarderesyan/piajs.git"
   },
   "keywords": [
     "vpn",
