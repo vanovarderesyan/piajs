@@ -4,7 +4,7 @@
   "description": "Node.js wrapper around the command line interface for The Private Internet Access Desktop Client. Intended to facilitate the operation of the PIA client from within Node.js",
   "main": "index.js",
   "scripts": {
-    "test": "node --test",
+    "test": "node --test test/*.test.js",
     "test:types": "tsc --noEmit --project tsconfig.types.json"
   },
   "repository": {
