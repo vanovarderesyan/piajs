@@ -3,7 +3,7 @@ const util = require("node:util");
 const exec_run = util.promisify(require("node:child_process").execFile);
 
 
-piapath = "piactl"
+let piapath = "piactl";
 if (process.platform === "win32")
     piapath = "C:\\Program Files\\Private Internet Access\\piactl.exe"
 
@@ -19,7 +19,7 @@ class PiaVpn {
         */
         try {
             const { stdout } = await exec_run(piapath, ["get", "regions"]);
-            const regions = stdout.split('\n')
+            const regions = stdout.split(/\r?\n/).map(region => region.trim()).filter(Boolean);
             return regions
         } catch (err) {
             throw new Error(err.message)
@@ -29,7 +29,7 @@ class PiaVpn {
     async region() {
         try {
             const { stdout } = await exec_run(piapath, ["get", "region"]);
-            return stdout.replace("\n", "");
+            return stdout.trim();
         } catch (err) {
             throw new Error(err.message)
         }
@@ -37,12 +37,13 @@ class PiaVpn {
 
     async setRegion(server = null) {
         const regions = await this.regions()
-        if (server == null || server.toLowerCase === "Auto") {
+        if (server == null || server.toLowerCase() === "auto") {
             server = "auto"
-        } else if (server.toLowerCase === "random") {
+        } else if (server.toLowerCase() === "random") {
+            if (regions.length === 0) throw new Error("No VPN regions are available");
             server = regions[Math.floor(Math.random() * regions.length)]
-        } else if (!regions.indexOf(server)) {
-            return new Error(`Server must be one of: ${regions}`)
+        } else if (!regions.includes(server)) {
+            throw new RangeError(`Server must be one of: ${regions}`)
         }
 
         try {
@@ -56,7 +57,7 @@ class PiaVpn {
     async status() {
         try {
             const { stdout } = await exec_run(piapath, ["get", "connectionstate"]);
-            return stdout.replace("\n", "");
+            return stdout.trim();
         } catch (err) {
             throw new Error(err.message)
         }
@@ -65,7 +66,7 @@ class PiaVpn {
     async ip() {
         try {
             const { stdout } = await exec_run(piapath, ["get", "vpnip"]);
-            return stdout.replace("\n", "");
+            return stdout.trim();
         } catch (err) {
             throw new Error(err.message)
         }
@@ -80,7 +81,7 @@ class PiaVpn {
         */
         try {
             const { stdout } = await exec_run(piapath, ["connect"]);
-            return stdout.replace("\n", "");
+            return stdout.trim();
         } catch (err) {
             throw new Error(err.message)
         }
@@ -93,7 +94,7 @@ class PiaVpn {
     async disconnect() {
         try {
             const { stdout } = await exec_run(piapath, ["disconnect"]);
-            return stdout.replace("\n", "");
+            return stdout.trim();
         } catch (err) {
             throw new Error(err.message)
         }
@@ -102,7 +103,7 @@ class PiaVpn {
     async reset_settings() {
         try {
             const { stdout } = await exec_run(piapath, ["resetsettings"]);
-            return stdout.replace("\n", "");
+            return stdout.trim();
         } catch (err) {
             throw new Error(err.message)
         }
@@ -111,7 +112,7 @@ class PiaVpn {
     async set_debug_logging() {
         try {
             const { stdout } = await exec_run(piapath, ["set", "debuglogging"]);
-            return stdout.replace("\n", "");
+            return stdout.trim();
         } catch (err) {
             throw new Error(err.message)
         }
@@ -121,7 +122,7 @@ class PiaVpn {
     async backgroundEnable() {
         try {
             const { stdout } = await exec_run(piapath, ["background", "enable"]);
-            return stdout.replace("\n", "");
+            return stdout.trim();
         } catch (err) {
             throw new Error(err.message)
         }

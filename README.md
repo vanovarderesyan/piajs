@@ -1,89 +1,99 @@
+# PiaJS
 
-# Piajs
-Node.js wrapper around the command line interface for The Private Internet Access Desktop Client. Intended to facilitate the operation of the PIA client from within Node.js.
+A dependency-free runtime wrapper around the `piactl` command-line interface for the [Private Internet Access](https://www.privateinternetaccess.com/) desktop VPN client. Works in **JavaScript** and **TypeScript** through bundled TypeScript declarations.
 
-node >= 16, no additional dependencies.
+## Requirements
 
+- Node.js 16 or newer (see [Node.js support](https://nodejs.org/en/about/previous-releases) when choosing a maintained version).
+- PIA Desktop Client installed and running.
+- `piactl` accessible on your PATH on macOS/Linux. On Windows, this library uses the default install path: `C:\\Program Files\\Private Internet Access\\piactl.exe`.
 
-## Installation
+Verify the executable with `piactl --version`. For details, see [PIA's command-line documentation](https://www.privateinternetaccess.com/helpdesk/kb/articles/pia-desktop-command-line-interface).
 
-Use the package manager [npm](https://www.npmjs.com/) to install *piajs*.
+## Install
 
-```bash
-npm install piajs
+The package name in this repository's `package.json` is **`piavpnjs`**:
+
+```sh
+npm install piavpnjs
 ```
 
-## Usage
-- PIA Desktop client must be installed.
+## JavaScript (CommonJS)
 
-- Command ```piactl```  must be available from your terminal. Try running ```piactl --version```. Iif you get something like ```2.0.1+04518``` you are good to go.
+```js
+const PiaVpn = require('piavpnjs');
 
-  If it does not run, please check [PIA Desktop: Command Line Interface](https://www.privateinternetaccess.com/helpdesk/kb/articles/pia-desktop-command-line-interface) documentation.
+async function main() {
+  const vpn = new PiaVpn();
+  console.log('Current status:', await vpn.status());
+  console.log('Available regions:', await vpn.regions());
 
-- PIA client must be running to use the connect method.
+  await vpn.setRegion('auto');
+  await vpn.connect(); // issues the connect command; does not wait for Connected
+  console.log('Connection state:', await vpn.status());
+}
 
-
-### Available Methods
-
--  ```regions()``` Returns list of strings with available servers.
-
-   i.e.:     ```['us-florida', 'us-atlanta', 'us-houston', 'us-washington-dc', 'us-east', 'us-chicago', 'us-new-york-city', 'us-texas', 'us-west', ...]```
-
-- ```region()``` Returns string of current selected server name.
-
-    i.e. ```'us-houston'```
-
-- ```set_region(server='auto')``` Cause the client to connect to selected server next time it connects. If client is already connected will disconnect and connect to new selected server.
-  * server (type: str)
-      +  'auto': use client auto select feature to set server with least latency.
-      + 'random': set a random server from the available list.
-      + '[server name]': set the server to a specific name, must be in the available list.
-
- - ```connect(verbose=False, timeout=20)``` Cause the client to connect
-   * verbose (type: bool) cause to display connecting status in stdout
-   * timeout (type: int) will disconnect if connection not possible before timeout
- - ```disconnect()``` Cause client to disconnect
- - ```ip()``` Returns the current VPN IP address, if connected and the address is known
- - ```status()``` Returns client conection status.
-
-   ```Disconnected, Connecting, StillConnecting, Connected, Interrupted, Reconnecting, StillReconnecting, DisconnectingToReconnect, Disconnecting```
-
-- ```reset_settings()``` Resets settings to the defaults. As per the documentation this only resets daemon settings, no GUI settings.
-
-- ```set_debug_logging(value=False)``` Enable client debug logging.
-
-
-### Example
-```node
-const PiaVpn = require('piajs')
-
-
-vpn = new PiaVpn()
-
-
-// Get connection status
-vpn.status() //equivalent to `piactl get connectionstate`
-
-//Will connect to server, displaying status in stdout
-vpn.connect()
-
-//Disconnect
-vpn.disconnect()
+main().catch(console.error);
 ```
+
+## TypeScript
+
+Bundled `index.d.ts` declarations provide type checking and editor autocomplete without changing the JavaScript runtime or requiring `@types/piavpnjs`.
+
+```ts
+import PiaVpn = require('piavpnjs');
+
+async function main(): Promise<void> {
+  const vpn = new PiaVpn();
+  const regions: string[] = await vpn.regions();
+  const state: string = await vpn.status();
+
+  console.log({ regions, state });
+  await vpn.setRegion('random');
+}
+
+main().catch(console.error);
+```
+
+When your TypeScript project has `esModuleInterop` enabled, you can also use `import PiaVpn from 'piavpnjs'`.
+
+## API
+
+All methods return promises. CLI errors reject the promise.
+
+| Method | Description |
+| --- | --- |
+| `regions(): Promise<string[]>` | List available region IDs. |
+| `region(): Promise<string>` | Get the selected region ID. |
+| `setRegion(server?: string \| null): Promise<string>` | Select `auto` (default), `random`, or an available region ID. Invalid IDs reject with `RangeError`. |
+| `status(): Promise<string>` | Get the connection state (e.g., `Disconnected`, `Connecting`, `Connected`). |
+| `ip(): Promise<string>` | Read the VPN IP reported by the client. |
+| `connect(): Promise<string>` | Issue a connect command; this does not wait for the connection to become ready. |
+| `disconnect(): Promise<string>` | Issue a disconnect command. |
+| `reset_settings(): Promise<string>` | Reset PIA daemon settings. |
+| `set_debug_logging(): Promise<string>` | Run the current CLI debug-logging command. |
+| `backgroundEnable(): Promise<string>` | Enable background mode. |
+
+**Current limitations:** `connect(timeout, verbose)` accepts those arguments for compatibility, but they currently have no effect. The library does not yet implement connection waiting, a timeout, or real-time progress events. If you need to confirm a connection, check `status()`.
+
+## Development
+
+```sh
+npm install
+npm test
+npm run test:types
+```
+
+Unit tests mock the `piactl` executable, so they can run without PIA installed. Actual VPN connections must be tested separately on a machine with the PIA Desktop Client.
+
 ## Contributing
-Pull requests are welcome. Please open an issue first to discuss what you would like to change.
 
-Please make sure to update tests as appropriate.
+Pull requests are welcome. Please open an issue first to discuss significant changes, and update tests when changing behavior.
 
+## Disclaimer
 
-## About this software
-The *piapy* software is a personal project. I have no prior or existing relationship with [Private Internet Access](https://www.privateinternetaccess.com/)
-
-If you have any information regarding its software, you can visit them:
-*  [PIA VPN](https://www.privateinternetaccess.com/)
-* [PIA Desktop: Command Line Interface](https://www.privateinternetaccess.com/helpdesk/kb/articles/pia-desktop-command-line-interface)
-
-
+PiaJS is an independent project, not affiliated with Private Internet Access.
 
 ## License
-with [MIT](https://choosealicense.com/licenses/mit/) open source license.
+
+ISC (as declared in `package.json`).
