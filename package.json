@@ -4,7 +4,8 @@
   "description": "Node.js wrapper around the command line interface for The Private Internet Access Desktop Client. Intended to facilitate the operation of the PIA client from within Node.js",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test",
+    "test:types": "tsc --noEmit --project tsconfig.types.json"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,9 @@
     "privateinternetaccess"
   ],
   "author": "Vano Varderesyan",
-  "license": "ISC"
+  "license": "ISC",
+  "types": "./index.d.ts",
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
 }
