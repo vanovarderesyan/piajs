@@ -6,12 +6,16 @@ const childProcess = require('node:child_process');
 
 const originalExecFile = childProcess.execFile;
 const calls = [];
-childProcess.execFile = (file, args, callback) => {
+const fakeExecFile = () => { throw new Error('Call the promisified CLI mock'); };
+// The real execFile has a custom promisify implementation returning { stdout, stderr }.
+fakeExecFile[require('node:util').promisify.custom] = async (file, args) => {
   calls.push({ file, args });
-  if (args.join(' ') === 'get regions') return callback(null, 'us-east\r\nus-west\r\n', '');
-  if (args.join(' ') === 'get connectionstate') return callback(null, 'Connected\r\n', '');
-  return callback(null, '', '');
+  const command = args.join(' ');
+  const stdout = command === 'get regions' ? 'us-east\r\nus-west\r\n' :
+    command === 'get connectionstate' ? 'Connected\r\n' : '';
+  return { stdout, stderr: '' };
 };
+childProcess.execFile = fakeExecFile;
 // Patch before requiring the module because it captures promisified execFile.
 const PiaVpn = require('../index.js');
 childProcess.execFile = originalExecFile;
